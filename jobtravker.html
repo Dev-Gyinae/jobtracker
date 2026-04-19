@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💼 Job Application Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#0c0c0a;--surface:#131310;--surface2:#1c1c18;--surface3:#232320;
+      --border:#252520;--border2:#303028;--text:#e8e6df;--muted:#52524a;--muted2:#3a3a32;
+      --accent:#c8f135;--blue:#4f8ef7;--green:#30d476;--amber:#f5a623;
+      --purple:#b06eff;--orange:#ff8c42;--teal:#2dd4bf;--red:#ff4d4d;
+      --mono:'IBM Plex Mono',monospace;--display:'Syne',sans-serif;
+    }
+    body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;padding:24px;}
+    .container{max-width:1000px;margin:0 auto;}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+    h1{font-family:var(--display);font-weight:800;font-size:2rem;letter-spacing:-.02em;}
+    h1 span{color:var(--accent);}
+    .btn{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#000;border:none;padding:10px 18px;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+    .btn:hover{opacity:.85;}
+    .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+    .btn-ghost:hover{border-color:var(--accent);color:var(--accent);opacity:1;}
+    .btn-danger{background:transparent;border:1px solid var(--red);color:var(--red);}
+    .btn-danger:hover{background:var(--red);color:#fff;opacity:1;}
+    .btn-sm{padding:6px 12px;font-size:.58rem;}
+    .icon-btn{background:none;border:1px solid var(--border);width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.8rem;transition:all .12s;}
+    .icon-btn:hover{border-color:var(--red);color:var(--red);}
+    .stat-bar{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);padding:12px 18px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:20px;}
+    .stat-item{display:flex;flex-direction:column;gap:2px;}
+    .stat-num{font-family:var(--display);font-size:1.4rem;font-weight:800;}
+    .stat-lbl{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+    .stat-div{width:1px;height:28px;background:var(--border2);}
+    .filter-tabs{display:flex;gap:0;margin-bottom:16px;flex-wrap:wrap;}
+    .filter-tab{font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:7px 14px 7px 0;cursor:pointer;margin-right:12px;transition:color .12s,border-color .12s;}
+    .filter-tab.active{color:var(--text);border-bottom-color:var(--accent);}
+    .form-panel{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);padding:20px;margin-bottom:20px;display:none;}
+    .form-panel.open{display:block;}
+    .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+    .fg{display:flex;flex-direction:column;gap:5px;}
+    .fg label{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+    .fi{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:.75rem;padding:9px 12px;outline:none;transition:border-color .15s;}
+    .fi:focus{border-color:var(--accent);}
+    textarea.fi{resize:vertical;min-height:60px;}
+    .form-actions{display:flex;gap:8px;margin-top:16px;}
+    .job-card{background:var(--surface);border:1px solid var(--border);padding:18px;margin-bottom:12px;position:relative;}
+    .job-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+    .job-title{font-size:1rem;font-weight:700;font-family:var(--display);}
+    .job-company{color:var(--accent);}
+    .job-meta{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:8px;font-size:.7rem;color:var(--muted);}
+    .badge{display:inline-block;font-size:.5rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border:1px solid;margin-right:6px;}
+    .bd-pending{border-color:var(--amber);color:var(--amber);}
+    .bd-interview{border-color:var(--blue);color:var(--blue);}
+    .bd-offer{border-color:var(--green);color:var(--green);}
+    .bd-rejected{border-color:var(--red);color:var(--red);}
+    .interview-stage{background:rgba(79,142,247,.1);border:1px solid var(--blue);padding:2px 8px;border-radius:2px;color:var(--blue);}
+    .empty-state{text-align:center;padding:48px;color:var(--muted);font-size:.85rem;}
+    .action-group{display:flex;gap:4px;}
+    .note-text{font-size:.65rem;color:var(--muted2);margin-top:6px;font-style:italic;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>JOB<span>TRACKER</span></h1>
+    <button class="btn" onclick="openForm()">+ ADD APPLICATION</button>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stat-bar" id="statsBar"></div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">All</button>
+    <button class="filter-tab" data-filter="pending">Pending</button>
+    <button class="filter-tab" data-filter="interview">Interview</button>
+    <button class="filter-tab" data-filter="offer">Offer</button>
+    <button class="filter-tab" data-filter="rejected">Rejected</button>
+  </div>
+
+  <!-- Add/Edit Form -->
+  <div class="form-panel" id="jobForm">
+    <div class="fgrid">
+      <div class="fg">
+        <label>Company *</label>
+        <input type="text" class="fi" id="company" placeholder="e.g. Google">
+      </div>
+      <div class="fg">
+        <label>Role *</label>
+        <input type="text" class="fi" id="role" placeholder="e.g. Frontend Developer">
+      </div>
+      <div class="fg">
+        <label>Platform / Source</label>
+        <input type="text" class="fi" id="platform" placeholder="LinkedIn, referral...">
+      </div>
+      <div class="fg">
+        <label>Date Applied</label>
+        <input type="date" class="fi" id="appliedDate">
+      </div>
+      <div class="fg">
+        <label>Status</label>
+        <select class="fi" id="status">
+          <option value="pending">Pending</option>
+          <option value="interview">Interview</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Interview Stage</label>
+        <select class="fi" id="interviewStage">
+          <option value="">— Not set —</option>
+          <option value="Phone Screen">📞 Phone Screen</option>
+          <option value="Technical">💻 Technical</option>
+          <option value="Onsite">🏢 Onsite</option>
+          <option value="Final">🎯 Final</option>
+          <option value="Other">📋 Other</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Interview Date</label>
+        <input type="date" class="fi" id="interviewDate">
+      </div>
+      <div class="fg">
+        <label>Rejection Date</label>
+        <input type="date" class="fi" id="rejectionDate">
+      </div>
+    </div>
+    <div class="fg" style="margin-top:8px;">
+      <label>Notes</label>
+      <textarea class="fi" id="notes" placeholder="Any follow-ups, contacts, or details..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn" id="saveBtn" onclick="saveJob()">SAVE APPLICATION</button>
+      <button class="btn btn-ghost" onclick="closeForm()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Job List Container -->
+  <div id="jobsContainer"></div>
+</div>
+
+<script>
+  (function(){
+    const STORAGE_KEY = 'jobTrackerV1';
+    
+    // ---------- STATE ----------
+    let jobs = [];
+    let currentFilter = 'all';
+    let editingId = null;
+
+    // ---------- LOAD / SAVE ----------
+    function loadJobs(){
+      try{
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if(saved) jobs = JSON.parse(saved);
+        else jobs = [];
+      }catch(e){ jobs = []; }
+    }
+
+    function saveJobs(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+    }
+
+    // Helper: generate short id
+    function generateId(){ return 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2,6); }
+
+    // Get today's date string
+    function todayStr(){ return new Date().toISOString().split('T')[0]; }
+
+    // Format date for display
+    function formatDate(d){ if(!d) return '—'; return d; }
+
+    // ---------- UI ELEMENTS ----------
+    const formEl = document.getElementById('jobForm');
+    const companyInp = document.getElementById('company');
+    const roleInp = document.getElementById('role');
+    const platformInp = document.getElementById('platform');
+    const appliedDateInp = document.getElementById('appliedDate');
+    const statusInp = document.getElementById('status');
+    const interviewStageInp = document.getElementById('interviewStage');
+    const interviewDateInp = document.getElementById('interviewDate');
+    const rejectionDateInp = document.getElementById('rejectionDate');
+    const notesInp = document.getElementById('notes');
+    const saveBtn = document.getElementById('saveBtn');
+    const statsBar = document.getElementById('statsBar');
+    const jobsContainer = document.getElementById('jobsContainer');
+
+    // ---------- FILTER TABS ----------
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        renderAll();
+      });
+    });
+
+    // ---------- FORM OPERATIONS ----------
+    window.openForm = function(jobId = null){
+      editingId = jobId;
+      formEl.classList.add('open');
+      
+      if(jobId){
+        const job = jobs.find(j => j.id === jobId);
+        if(job){
+          companyInp.value = job.company || '';
+          roleInp.value = job.role || '';
+          platformInp.value = job.platform || '';
+          appliedDateInp.value = job.appliedDate || '';
+          statusInp.value = job.status || 'pending';
+          interviewStageInp.value = job.interviewStage || '';
+          interviewDateInp.value = job.interviewDate || '';
+          rejectionDateInp.value = job.rejectionDate || '';
+          notesInp.value = job.notes || '';
+          saveBtn.textContent = 'UPDATE APPLICATION';
+        }
+      } else {
+        // New job: set default applied date to today
+        appliedDateInp.value = todayStr();
+        saveBtn.textContent = 'SAVE APPLICATION';
+      }
+    };
+
+    window.closeForm = function(){
+      formEl.classList.remove('open');
+      clearForm();
+      editingId = null;
+    };
+
+    function clearForm(){
+      companyInp.value = '';
+      roleInp.value = '';
+      platformInp.value = '';
+      appliedDateInp.value = '';
+      statusInp.value = 'pending';
+      interviewStageInp.value = '';
+      interviewDateInp.value = '';
+      rejectionDateInp.value = '';
+      notesInp.value = '';
+    }
+
+    window.saveJob = function(){
+      const company = companyInp.value.trim();
+      const role = roleInp.value.trim();
+      if(!company || !role){
+        alert('Company and Role are required.');
+        return;
+      }
+
+      const jobData = {
+        company,
+        role,
+        platform: platformInp.value.trim(),
+        appliedDate: appliedDateInp.value || todayStr(),
+        status: statusInp.value,
+        interviewStage: interviewStageInp.value,
+        interviewDate: interviewDateInp.value || null,
+        rejectionDate: rejectionDateInp.value || null,
+        notes: notesInp.value.trim()
+      };
+
+      if(editingId){
+        const index = jobs.findIndex(j => j.id === editingId);
+        if(index !== -1){
+          jobs[index] = { ...jobs[index], ...jobData };
+        }
+      } else {
+        jobs.unshift({ id: generateId(), ...jobData });
+      }
+
+      saveJobs();
+      closeForm();
+      renderAll();
+    };
+
+    window.deleteJob = function(id){
+      if(!confirm('Delete this application?')) return;
+      jobs = jobs.filter(j => j.id !== id);
+      saveJobs();
+      renderAll();
+    };
+
+    window.editJob = function(id){
+      openForm(id);
+    };
+
+    // ---------- RENDER ----------
+    function calculateStats(){
+      const total = jobs.length;
+      const pending = jobs.filter(j => j.status === 'pending').length;
+      const interview = jobs.filter(j => j.status === 'interview').length;
+      const offer = jobs.filter(j => j.status === 'offer').length;
+      const rejected = jobs.filter(j => j.status === 'rejected').length;
+      return { total, pending, interview, offer, rejected };
+    }
+
+    function renderStats(){
+      const stats = calculateStats();
+      statsBar.innerHTML = `
+        <div class="stat-item"><div class="stat-num" style="color:var(--text)">${stats.total}</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-div"></div>
+        <div class="stat-item"><div class="stat-num" style="color:var(--amber)">${stats.pending}</div><div class="stat-lbl">Pending</div></div>
+        <div class="stat-div"></div>
+        <div class="stat-item"><div class="stat-num" style="color:var(--blue)">${stats.interview}</div><div class="stat-lbl">Interview</div></div>
+        <div class="stat-div"></div>
+        <div class="stat-item"><div class="stat-num" style="color:var(--green)">${stats.offer}</div><div class="stat-lbl">Offer</div></div>
+        <div class="stat-div"></div>
+        <div class="stat-item"><div class="stat-num" style="color:var(--red)">${stats.rejected}</div><div class="stat-lbl">Rejected</div></div>
+      `;
+    }
+
+    function renderJobs(){
+      let filteredJobs = jobs;
+      if(currentFilter !== 'all'){
+        filteredJobs = jobs.filter(j => j.status === currentFilter);
+      }
+
+      if(filteredJobs.length === 0){
+        jobsContainer.innerHTML = `<div class="empty-state">📭 No applications ${currentFilter !== 'all' ? 'in this category' : 'yet'}.<br><button class="btn btn-sm" style="margin-top:16px;" onclick="openForm()">+ Add your first</button></div>`;
+        return;
+      }
+
+      // Sort by applied date descending
+      const sorted = [...filteredJobs].sort((a,b) => (b.appliedDate || '').localeCompare(a.appliedDate || ''));
+
+      let html = '';
+      sorted.forEach(job => {
+        const statusClass = {
+          pending: 'bd-pending',
+          interview: 'bd-interview',
+          offer: 'bd-offer',
+          rejected: 'bd-rejected'
+        }[job.status] || 'bd-pending';
+
+        // Build meta information
+        let metaHtml = '';
+        if(job.platform) metaHtml += `<span>📌 ${job.platform}</span>`;
+        metaHtml += `<span>📅 Applied: ${formatDate(job.appliedDate)}</span>`;
+        
+        if(job.status === 'interview' && job.interviewStage){
+          metaHtml += `<span class="interview-stage">🎯 ${job.interviewStage}</span>`;
+          if(job.interviewDate) metaHtml += `<span>🗓️ Interview: ${job.interviewDate}</span>`;
+        }
+        if(job.status === 'rejected' && job.rejectionDate){
+          metaHtml += `<span>❌ Rejected: ${job.rejectionDate}</span>`;
+        }
+        if(job.status === 'offer'){
+          metaHtml += `<span>🎉 Offer received!</span>`;
+        }
+
+        html += `
+          <div class="job-card">
+            <div class="job-header">
+              <div>
+                <span class="badge ${statusClass}">${job.status}</span>
+                <span class="job-title">${job.role}</span>
+                <span class="job-company"> @ ${job.company}</span>
+              </div>
+              <div class="action-group">
+                <button class="icon-btn" onclick="editJob('${job.id}')" title="Edit">✎</button>
+                <button class="icon-btn" onclick="deleteJob('${job.id}')" title="Delete">✕</button>
+              </div>
+            </div>
+            <div class="job-meta">
+              ${metaHtml}
+            </div>
+            ${job.notes ? `<div class="note-text">📝 ${job.notes}</div>` : ''}
+          </div>
+        `;
+      });
+      jobsContainer.innerHTML = html;
+    }
+
+    function renderAll(){
+      renderStats();
+      renderJobs();
+    }
+
+    // ---------- INIT ----------
+    function init(){
+      loadJobs();
+      // Set default date for new form when opened fresh
+      renderAll();
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
